@@ -1,9 +1,9 @@
 # Git prune plugin
-This plugin allows you to delete and clean the branches that are already merged in your git repositories, included local and remote repositories.
+This plugin allows you to delete and clean the branches that are already merged in your git repositories, including local and remote branches.
 
 ## Instalation
 
-1. You must firs install oh-my-zsh
+1. You first must install oh-my-zsh
 
 	https://github.com/robbyrussell/oh-my-zsh
 
