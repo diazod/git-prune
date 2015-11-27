@@ -24,7 +24,7 @@ This plugin allows you to delete and clean the branches that are already merged 
 
 ## Usage
 
-You can performe the removal just by writing the command
+You can perform the removal just by writing the command
 ```bash
 gprune <branch name>
 ```
