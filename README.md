@@ -32,7 +32,7 @@ gprune <branch name>
 
 You can also select to clean and remove local or remote branches separately by using these commands respectively:
 
-#### Remote branches
+#### Local branches
 
 ```bash
 gprune -l <branch name>
