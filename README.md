@@ -1,5 +1,5 @@
 # Git prune plugin
-This plugin allows you to delete and clean the branches that are already merged in your git repositories, including local and remote branches.
+This plugin allows you to delete all branches that are already merged in your local repository or/and that were merged in your remote repository (/origin)
 
 ## Instalation
 
@@ -21,25 +21,31 @@ This plugin allows you to delete and clean the branches that are already merged 
 
 	```
 
+### EXAMPLE
 
-## Usage
-
-You can perform the removal just by writing the command
-```bash
-gprune <branch name>
-```
-<branch name> being the  branch you are going to compare to know what branches are already merged
-
-You can also select to clean and remove local or remote branches separately by using these commands respectively:
-
-#### Local branches
+You can perform the removal just by just writing the command:
 
 ```bash
-gprune -l <branch name>
+
+gprune
+
 ```
 
-#### Remote branches
+### SYNOPSIS
+
 
 ```bash
-gprune -r <branch name>
+
+gprune [-r | -l] <branch-name>
+
 ```
+
+### OPTIONS
+
+	<branch-name> 
+		This is the base branch which the plugin will use to compare the merged branches, for example if you have the branch named "develop" and the branch named "example" is already merged in "develop" but not in a branch named "master" the plugin will delete "example".
+
+	-r 
+		Defines that only remote branches that were merged should be removed from the repository
+	-l 
+		Defines that only local branches that were merged shold be removed from the repository
