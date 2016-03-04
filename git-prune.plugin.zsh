@@ -1,22 +1,34 @@
 gprune() {
-
-  __print_remote_branches(){
-    __remote_branches=$(git branch -r --merged | grep -v '/master$' | grep -v "/$branch_to_compare$")
+  __print_remote_branches() {
+    echo "Fetching branches..."
+    git fetch --prune
+    __remote_branches=$(git branch -r --merged| grep -v '/release'| grep -v "HEAD" | grep -v '/master$' | grep -v "/$1$")
     if [[ -n "$__remote_branches" ]]; then
-      echo "This REMOTE branches will be removed:"
+      echo "These REMOTE branches will be removed:"
       echo "$__remote_branches"
     fi
   }
 
-  __print_local_branches(){
-    __local_branches=$(git branch --merged | grep -v 'master$' | grep -v "$current_branch$")
+  __print_local_branches() {
+    __local_branches=$(git branch --merged | grep -v 'release' | grep -v 'master$' | grep -v "$1$")
     if [[ -n "$__local_branches" ]]; then
-      echo "This LOCAL branches will be removed:"
+      echo "These LOCAL branches will be removed:"
       echo "$__local_branches"
     fi
   }
 
+  __prune_remote_branches() {
+    git push origin `git branch -r --merged | grep -v '/master$' | grep -v '/release'| grep -v "HEAD" | grep -v "/$1$" | grep -v "develop" |grep -v "staging"|sed 's/origin\//:/g' | tr -d '\n'`
+  }
+
+  __prune_local_branches() {
+    git branch -d `git branch --merged | grep -v 'master$'  | grep -v 'release' |grep -v "develop" |grep -v "staging"| grep -v "$1$" | sed 's/origin\///g' | tr -d '\n'`
+  }
+
+  isRemote=false
+  isLocal=false
   custom_command=''
+
   branch_to_compare=$1
   case $branch_to_compare in
     ("-r" | "--remote") isRemote=true;;
@@ -38,13 +50,13 @@ gprune() {
   if [[ -z "$branch_to_compare" ]]; then
     echo "The branch name is invalid"
   else
-    remote_branches=$(git branch -r --merged | grep -v '/master$' | grep -v "/$branch_to_compare$")
-    local_branches=$(git branch --merged | grep -v 'master$' | grep -v "$branch_to_compare$")
+    remote_branches=$(git branch -r --merged| grep -v '/release'| grep -v "HEAD" | grep -v '/master$' | grep -v "/$branch_to_compare$")
+    local_branches=$(git branch --merged | grep -v 'release' | grep -v 'master$' | grep -v "$branch_to_compare$")
 
-    if [ -z "$remote_branches" ] && [ -z "$local_branches" ]; then
-      echo "No existing branches have been merged into $current_branch."
+    echo "Current branch: $branch_to_compare"
+    if ([ -z "$remote_branches" ] && $isRemote ]) || ([ -z "$local_branches" ] && $isLocal ]) || ([ -z "$remote_branches" ] && [ -z "$local_branches" ]); then
+      echo "There aren't any new merged branches into $branch_to_compare"
     else
-      echo "Current branch: $branch_to_compare"
       if $isRemote; then
         __print_remote_branches "$branch_to_compare"
       elif $isLocal; then
@@ -53,6 +65,23 @@ gprune() {
         __print_local_branches "$branch_to_compare"
         __print_remote_branches "$branch_to_compare"
       fi
+      echo "Are you sure you want to delete these branches?"
+      select yn in "Yes" "No"; do
+          case $yn in
+              Yes )
+                echo "Deleting branches..."
+                if $isRemote; then
+                  __prune_remote_branches "$branch_to_compare"
+                elif $isLocal; then
+                  __prune_local_branches "$branch_to_compare"
+                else
+                  __prune_remote_branches "$branch_to_compare"
+                  __prune_local_branches "$branch_to_compare"
+                fi
+              break;;
+              No ) exit;;
+          esac
+      done
     fi
   fi
 }
