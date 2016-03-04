@@ -36,16 +36,16 @@ gprune
 
 ```bash
 
-gprune [-r | -l] <branch-name>
+gprune [ -r | --remote | -l | --local ] <branch-name>
 
 ```
 
 ### OPTIONS
 
-	<branch-name> 
+	<branch-name>
 		This is the base branch which the plugin will use to compare the merged branches, for example if you have the branch named "develop" and the branch named "example" is already merged in "develop" but not in a branch named "master" the plugin will delete "example".
 
-	-r 
+	-r, --remote
 		Defines that only remote branches that were merged should be removed from the repository
-	-l 
+	-l, --local
 		Defines that only local branches that were merged shold be removed from the repository

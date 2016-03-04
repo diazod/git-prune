@@ -79,7 +79,7 @@ gprune() {
                   __prune_local_branches "$branch_to_compare"
                 fi
               break;;
-              No ) exit;;
+              No ) echo "No changes done";;
           esac
       done
     fi
