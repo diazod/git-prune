@@ -26,21 +26,19 @@ gprune() {
   }
 
   isRemote=false
-  isLocal=false
-  custom_command=''
+  isBoth=false
 
   branch_to_compare=$1
   case $branch_to_compare in
     ("-r" | "--remote") isRemote=true;;
-    ("-l" | "--local") isLocal=true;;
+    ("-b" | "--both") isBoth=true;;
     (*)
       isRemote=false
-      isLocal=false
+      isBoth=false
     ;;
   esac
 
-  if $isRemote || $isLocal; then
-    custom_command=$1
+  if $isRemote || $isBoth; then
     branch_to_compare=$2
   fi
   if [[ -z "$branch_to_compare" ]]; then
@@ -54,16 +52,16 @@ gprune() {
     local_branches=$(git branch --merged "$branch_to_compare" | grep -v 'master$'  | grep -v 'release' | grep -v "develop$" | grep -v "staging" | grep -v "$branch_to_compare$")
 
     echo "Current branch: $branch_to_compare"
-    if ([ -z "$remote_branches" ] && $isRemote ]) || ([ -z "$local_branches" ] && $isLocal ]) || ([ -z "$remote_branches" ] && [ -z "$local_branches" ]); then
+    if ([ -z "$remote_branches" ] && $isRemote ]) || ([ -z "$local_branches" ] && $isBoth ]) || ([ -z "$remote_branches" ] && [ -z "$local_branches" ]); then
       echo "There aren't any new merged branches into $branch_to_compare"
     else
       if $isRemote; then
         __print_remote_branches "$branch_to_compare"
-      elif $isLocal; then
-        __print_local_branches "$branch_to_compare"
-      else
+      elif $isBoth; then
         __print_local_branches "$branch_to_compare"
         __print_remote_branches "$branch_to_compare"
+      else
+        __print_local_branches "$branch_to_compare"
       fi
       echo "Are you sure you want to delete these branches?"
       select yn in "Yes" "No"; do
@@ -72,10 +70,10 @@ gprune() {
                 echo "Deleting branches..."
                 if $isRemote; then
                   __prune_remote_branches "$branch_to_compare"
-                elif $isLocal; then
+                elif $isBoth; then
+                  __prune_remote_branches "$branch_to_compare"
                   __prune_local_branches "$branch_to_compare"
                 else
-                  __prune_remote_branches "$branch_to_compare"
                   __prune_local_branches "$branch_to_compare"
                 fi
               break;;
