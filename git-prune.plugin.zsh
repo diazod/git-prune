@@ -52,7 +52,7 @@ gprune() {
     local_branches=$(git branch --merged "$branch_to_compare" | grep -v 'master$'  | grep -v 'release' | grep -v "develop$" | grep -v "staging" | grep -v "$branch_to_compare$")
 
     echo "Current branch: $branch_to_compare"
-    if ([ -z "$remote_branches" ] && $isRemote ]) || [ -z "$local_branches" ] || ([ -z "$remote_branches" ] && [ -z "$local_branches" ] && $isBoth); then
+    if  ($isBoth && [ -z "$remote_branches" ] && [ -z "$local_branches" ]) || ([ -z "$remote_branches" ] && $isRemote) || ([ -z "$local_branches" ] && ! [ $isBoth == true ] && ! [ $isRemote == true ]); then
       echo "There aren't any new merged branches into $branch_to_compare"
     else
       if $isRemote; then
