@@ -7,7 +7,7 @@ This plugin allows you to delete all branches that are already merged in your lo
 
 	https://github.com/robbyrussell/oh-my-zsh
 
-2. Download or clone git-prune and copy/move to the directory.oh-my-zsh/plugins
+2. Download or clone git-prune and copy/move to the directory ~/.oh-my-zsh/plugins
 
 3. Edit the the following lines in the file .zshrc
 
