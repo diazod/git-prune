@@ -63,23 +63,24 @@ gprune() {
       else
         __print_local_branches "$branch_to_compare"
       fi
-      echo "Are you sure you want to delete these branches?"
-      select yn in "Yes" "No"; do
+
+      echo "Are you sure you want to delete these branches? (Y/n)"
+      while true; do
+          read "yn?"
           case $yn in
-              Yes )
-                echo "Deleting branches..."
-                if $isRemote; then
-                  __prune_remote_branches "$branch_to_compare"
-                elif $isBoth; then
-                  __prune_remote_branches "$branch_to_compare"
-                  __prune_local_branches "$branch_to_compare"
-                else
-                  __prune_local_branches "$branch_to_compare"
-                fi
-              break;;
-              No )
-                echo "No changes done"
-              break;;
+            [Yy]* )
+              echo "Deleting branches..."
+              if $isRemote; then
+                __prune_remote_branches "$branch_to_compare"
+              elif $isBoth; then
+                __prune_remote_branches "$branch_to_compare"
+                __prune_local_branches "$branch_to_compare"
+              else
+                __prune_local_branches "$branch_to_compare"
+              fi
+            break;;
+            [Nn]* ) break;;
+            * ) break;;
           esac
       done
     fi
