@@ -64,9 +64,8 @@ gprune() {
         __print_local_branches "$branch_to_compare"
       fi
 
-      echo "Are you sure you want to delete these branches? (Y/n)"
       while true; do
-          read "yn?"
+          read "yn?Are you sure you want to delete these branches? (Y/n): "
           case $yn in
             [Yy]* )
               echo "Deleting branches..."
@@ -80,7 +79,6 @@ gprune() {
               fi
             break;;
             [Nn]* ) break;;
-            * ) break;;
           esac
       done
     fi
