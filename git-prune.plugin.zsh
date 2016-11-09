@@ -25,6 +25,25 @@ gprune() {
     fi
   }
 
+  usage="usage:
+gprune [ -r | --remote | -b | --both ] <branch-name>
+
+options:
+<branch-name>
+This is the base branch which the plugin will use to compare the merged branches, for example:
+given the branches \"master\", \"develop\" and \"example\", you are currently in the branch
+\"develop\" and the branch named \"example\" is already merged into it but not into \"master\"
+the plugin will delete the branch \"example\".
+
+-r, --remote
+Defines that only remote branches which were merged should be removed from the repository.
+
+-b, --both
+Defines that both remote and local branches which were merged
+should be removed from the repository.
+"
+
+  isHelp=false
   isRemote=false
   isBoth=false
 
@@ -32,15 +51,22 @@ gprune() {
   case $branch_to_compare in
     ("-r" | "--remote") isRemote=true;;
     ("-b" | "--both") isBoth=true;;
+    ("-h" | "--help") isHelp=true;;
     (*)
       isRemote=false
       isBoth=false
     ;;
   esac
 
+  if $isHelp; then
+    echo "$usage"
+    return
+  fi
+
   if $isRemote || $isBoth; then
     branch_to_compare=$2
   fi
+
   if [[ -z "$branch_to_compare" ]]; then
       branch_to_compare=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
   fi
