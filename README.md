@@ -30,6 +30,10 @@ If you use the [antigen](https://github.com/zsh-users/antigen) framework, add `a
 
 If you're using the [zgen](https://github.com/tarjoilija/zgen) framework, add `zgen load Seinh/git-prune` to your .zshrc with your other zgen load commands.
 
+### Zplugin
+
+If you're using the [zplugin](https://github.com/zdharma/zplugin) framework, add `zplugin light diazod/git-prune` to your .zshrc with your other `zplugin light` commands.
+
 ### EXAMPLE
 
 You can perform the removal of the merged local branches by just writing the command:
