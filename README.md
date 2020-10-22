@@ -5,7 +5,7 @@ This plugin allows you to delete all branches that are already merged in your lo
 
 ### Antigen
 
-If you use the [antigen](https://github.com/zsh-users/antigen) framework, add `antigen bundle Seinh/git-prune` to your .zshrc file. Antigen will handle cloning the plugin for you automatically the next time you start zsh. You can also add the plugin to a running zsh with `antigen bundle Seinh/git-prune` for testing before adding it to your `.zshrc`.
+If you use the [antigen](https://github.com/zsh-users/antigen) framework, add `antigen bundle diazod/git-prune` to your .zshrc file. Antigen will handle cloning the plugin for you automatically the next time you start zsh. You can also add the plugin to a running zsh with `antigen bundle diazod/git-prune` for testing before adding it to your `.zshrc`.
 
 ### Oh-My-Zsh
 
@@ -28,7 +28,7 @@ If you use the [antigen](https://github.com/zsh-users/antigen) framework, add `a
 
 ### Zgen
 
-If you're using the [zgen](https://github.com/tarjoilija/zgen) framework, add `zgen load Seinh/git-prune` to your .zshrc with your other zgen load commands.
+If you're using the [zgen](https://github.com/tarjoilija/zgen) framework, add `zgen load diazod/git-prune` to your .zshrc with your other zgen load commands.
 
 ### Zplugin
 
