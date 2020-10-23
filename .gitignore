@@ -10,7 +10,6 @@
 *.swp
 *.tgz
 *.xml
-*.txt
 *.orig
 .DS_Store
 .idea
