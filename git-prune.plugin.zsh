@@ -78,6 +78,7 @@ should be removed from the repository.
     local_branches=$(git branch --merged "$branch_to_compare" | grep -v 'master$'  | grep -v 'release' | grep -v "develop$" | grep -v "staging" | grep -v "$branch_to_compare$")
 
     echo "Current branch: $branch_to_compare"
+
     if  ($isBoth && [ -z "$remote_branches" ] && [ -z "$local_branches" ]) || ([ -z "$remote_branches" ] && $isRemote) || ([ -z "$local_branches" ] && ! [ $isBoth = true ] && ! [ $isRemote = true ]); then
       echo "There aren't any new merged branches into $branch_to_compare"
     else
@@ -90,22 +91,27 @@ should be removed from the repository.
         __print_local_branches "$branch_to_compare"
       fi
 
-      while true; do
-          read "yn?Are you sure you want to delete these branches? (Y/n): "
-          case $yn in
-            [Yy]* )
-              echo "Deleting branches..."
-              if $isRemote; then
-                __prune_remote_branches "$branch_to_compare"
-              elif $isBoth; then
-                __prune_remote_branches "$branch_to_compare"
-                __prune_local_branches "$branch_to_compare"
-              else
-                __prune_local_branches "$branch_to_compare"
-              fi
-            break;;
-            [Nn]* ) break;;
-          esac
+      declare choice=true
+
+      while $choice; do
+        read "yn?Are you sure you want to delete these branches? (Y/n): "
+        yn=${yn:-enter}
+
+        if [ $yn = "Y" -o $yn = "y" -o $yn = 'enter' ]; then
+          echo "Deleting branches..."
+
+          if $isRemote; then
+            __prune_remote_branches "$branch_to_compare"
+          elif $isBoth; then
+            __prune_remote_branches "$branch_to_compare"
+            __prune_local_branches "$branch_to_compare"
+          else
+            __prune_local_branches "$branch_to_compare"
+          fi
+          choice=false
+        elif [ $yn = "N" -o $yn = "n" ]; then
+          choice=false
+        fi
       done
     fi
   fi
