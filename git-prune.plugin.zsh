@@ -46,17 +46,24 @@ should be removed from the repository.
   isHelp=false
   isRemote=false
   isBoth=false
+  isVersion=false
 
   branch_to_compare=$1
   case $branch_to_compare in
     ("-r" | "--remote") isRemote=true;;
     ("-b" | "--both") isBoth=true;;
     ("-h" | "--help") isHelp=true;;
+    ("-v" | "--version") isVersion=true;;
     (*)
       isRemote=false
       isBoth=false
     ;;
   esac
+
+  if $isVersion; then
+    echo "v1.0.1"
+    return
+  fi
 
   if $isHelp; then
     echo "$usage"
