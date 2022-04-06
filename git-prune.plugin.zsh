@@ -66,7 +66,7 @@ Defines the protected branches, which won't be deleted in the process.
   esac
 
   if $isVersion; then
-    echo "v1.0.2"
+    echo "v1.0.3"
     return
   fi
 
