@@ -61,7 +61,7 @@ should be removed from the repository.
   esac
 
   if $isVersion; then
-    echo "v1.0.1"
+    echo "v1.0.2"
     return
   fi
 
