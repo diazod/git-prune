@@ -8,9 +8,8 @@ gprune() {
   }
 
   __print_remote_branches() {
-    echo "Fetching branches..."
-    git fetch --prune
     __remote_branches=$(git branch -r --merged "$1" | grep -v "HEAD" | grep -v '/release' | grep -v '/master$' | grep -v "/staging" | grep -v "/develop$" | grep -v "/$1$")
+
     if [[ -n "$__remote_branches" ]]; then
       echo "These REMOTE branches will be removed:"
       echo "$__remote_branches"
@@ -49,6 +48,7 @@ should be removed from the repository.
   isVersion=false
 
   branch_to_compare=$1
+
   case $branch_to_compare in
     ("-r" | "--remote") isRemote=true;;
     ("-b" | "--both") isBoth=true;;
@@ -75,12 +75,17 @@ should be removed from the repository.
   fi
 
   if [[ -z "$branch_to_compare" ]]; then
-      branch_to_compare=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
+    branch_to_compare=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
   fi
 
   if [[ -z "$branch_to_compare" ]]; then
     echo "The branch name is invalid"
   else
+    if ($isBoth || $isRemote) then
+      echo "Fetching branches..."
+      git fetch --prune
+    fi
+
     remote_branches=$(git branch -r --merged "$branch_to_compare" | grep -v "HEAD" | grep -v '/release' | grep -v '/master$' | grep -v "/staging" | grep -v "/develop$" | grep -v "/$branch_to_compare$")
     local_branches=$(git branch --merged "$branch_to_compare" | grep -v 'master$'  | grep -v 'release' | grep -v "develop$" | grep -v "staging" | grep -v "$branch_to_compare$")
 
