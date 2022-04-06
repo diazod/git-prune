@@ -40,24 +40,29 @@ Defines that only remote branches which were merged should be removed from the r
 -b, --both
 Defines that both remote and local branches which were merged
 should be removed from the repository.
+
+-s, --setup
+Defines the protected branches, which won't be deleted in the process.
 "
 
   isHelp=false
   isRemote=false
-  isBoth=false
+  isLocal=false
   isVersion=false
+  remote_branches=""
+  local_branches=""
 
   branch_to_compare=$1
 
   case $branch_to_compare in
-    ("-r" | "--remote") isRemote=true;;
-    ("-b" | "--both") isBoth=true;;
     ("-h" | "--help") isHelp=true;;
     ("-v" | "--version") isVersion=true;;
-    (*)
-      isRemote=false
-      isBoth=false
+    ("-r" | "--remote") isRemote=true;;
+    ("-b" | "--both")
+      isRemote=true
+      isLocal=true
     ;;
+    (*) isLocal=true;;
   esac
 
   if $isVersion; then
@@ -70,7 +75,7 @@ should be removed from the repository.
     return
   fi
 
-  if $isRemote || $isBoth; then
+  if $isRemote; then
     branch_to_compare=$2
   fi
 
@@ -81,45 +86,45 @@ should be removed from the repository.
   if [[ -z "$branch_to_compare" ]]; then
     echo "The branch name is invalid"
   else
-    if ($isBoth || $isRemote) then
-      echo "Fetching branches..."
+    if ([ $isRemote = true ]) then
+      echo "Fetching remote branches..."
       git fetch --prune
+      remote_branches=$(git branch -r --merged "$branch_to_compare" | grep -v "HEAD" | grep -v '/release' | grep -v '/master$' | grep -v "/staging" | grep -v "/develop$" | grep -v "/$branch_to_compare$")
     fi
 
-    remote_branches=$(git branch -r --merged "$branch_to_compare" | grep -v "HEAD" | grep -v '/release' | grep -v '/master$' | grep -v "/staging" | grep -v "/develop$" | grep -v "/$branch_to_compare$")
-    local_branches=$(git branch --merged "$branch_to_compare" | grep -v 'master$'  | grep -v 'release' | grep -v "develop$" | grep -v "staging" | grep -v "$branch_to_compare$")
+    if ($isLocal) then
+      local_branches=$(git branch --merged "$branch_to_compare" | grep -v 'master$'  | grep -v 'release' | grep -v "develop$" | grep -v "staging" | grep -v "$branch_to_compare$")
+    fi
 
     echo "Current branch: $branch_to_compare"
 
-    if  ($isBoth && [ -z "$remote_branches" ] && [ -z "$local_branches" ]) || ([ -z "$remote_branches" ] && $isRemote) || ([ -z "$local_branches" ] && ! [ $isBoth = true ] && ! [ $isRemote = true ]); then
+    if ([ -z "$remote_branches" ] && [ -z "$local_branches" ]) then
       echo "There aren't any new merged branches into $branch_to_compare"
     else
+      if $isLocal; then
+        __print_local_branches "$branch_to_compare"
+      fi
       if $isRemote; then
         __print_remote_branches "$branch_to_compare"
-      elif $isBoth; then
-        __print_local_branches "$branch_to_compare"
-        __print_remote_branches "$branch_to_compare"
-      else
-        __print_local_branches "$branch_to_compare"
       fi
 
       declare choice=true
 
       while $choice; do
         read "yn?Are you sure you want to delete these branches? (Y/n): "
+
         yn=${yn:-enter}
 
         if [ $yn = "Y" -o $yn = "y" -o $yn = 'enter' ]; then
           echo "Deleting branches..."
 
-          if $isRemote; then
+          if ($isRemote) then
             __prune_remote_branches "$branch_to_compare"
-          elif $isBoth; then
-            __prune_remote_branches "$branch_to_compare"
-            __prune_local_branches "$branch_to_compare"
-          else
+          fi
+          if ($isLocal) then
             __prune_local_branches "$branch_to_compare"
           fi
+
           choice=false
         elif [ $yn = "N" -o $yn = "n" ]; then
           choice=false
