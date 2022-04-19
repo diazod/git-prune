@@ -15,7 +15,7 @@ If you use the [antigen](https://github.com/zsh-users/antigen) framework, add `a
 
 2. Download or clone git-prune and copy/move to the directory ~/.oh-my-zsh/plugins
 
-3. Edit the the following lines in the file .zshrc
+3. Edit the following lines in the file .zshrc
 
 ```bash
 	# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
