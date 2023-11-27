@@ -1,17 +1,14 @@
 # Git prune plugin
+
 This plugin allows you to delete all branches that are already merged in your local repository or/and that were merged in your remote repository (/origin)
 
 ## Instalation
-
-### Antigen
-
-If you use the [antigen](https://github.com/zsh-users/antigen) framework, add `antigen bundle diazod/git-prune` to your .zshrc file. Antigen will handle cloning the plugin for you automatically the next time you start zsh. You can also add the plugin to a running zsh with `antigen bundle diazod/git-prune` for testing before adding it to your `.zshrc`.
 
 ### Oh-My-Zsh
 
 1. You first must install oh-my-zsh
 
-	https://github.com/robbyrussell/oh-my-zsh
+   https://github.com/robbyrussell/oh-my-zsh
 
 2. Download or clone git-prune and copy/move to the directory ~/.oh-my-zsh/plugins
 
@@ -26,6 +23,10 @@ If you use the [antigen](https://github.com/zsh-users/antigen) framework, add `a
 	plugins=(git git-prune)
 ```
 
+### Antigen
+
+If you use the [antigen](https://github.com/zsh-users/antigen) framework, add `antigen bundle diazod/git-prune` to your .zshrc file. Antigen will handle cloning the plugin for you automatically the next time you start zsh. You can also add the plugin to a running zsh with `antigen bundle diazod/git-prune` for testing before adding it to your `.zshrc`.
+
 ### Zgen
 
 If you're using the [zgen](https://github.com/tarjoilija/zgen) framework, add `zgen load diazod/git-prune` to your .zshrc with your other zgen load commands.
@@ -33,6 +34,10 @@ If you're using the [zgen](https://github.com/tarjoilija/zgen) framework, add `z
 ### Zplugin
 
 If you're using the [zplugin](https://github.com/zdharma/zplugin) framework, add `zplugin light diazod/git-prune` to your .zshrc with your other `zplugin light` commands.
+
+### Manual
+
+If you want to manually install the plugin just copy the files of this repository to the folder `~/.oh-my-zsh/custom/plugins/git-prune`
 
 ### EXAMPLE
 
@@ -43,7 +48,6 @@ gprune
 ```
 
 ### SYNOPSIS
-
 
 ```bash
 gprune [ -r | --remote | -b | --both ] <branch-name>
