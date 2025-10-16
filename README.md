@@ -2,7 +2,7 @@
 
 This plugin allows you to delete all branches that are already merged in your local repository or/and that were merged in your remote repository (/origin)
 
-## Instalation
+## Installation
 
 ### Oh-My-Zsh
 
@@ -39,6 +39,45 @@ If you're using the [zplugin](https://github.com/zdharma/zplugin) framework, add
 
 If you want to manually install the plugin just copy the files of this repository to the folder `~/.oh-my-zsh/custom/plugins/git-prune`
 
+## Configuration
+
+### Protected Branches
+
+The git-prune plugin now supports configurable protected branches to prevent accidental deletion of important branches. By default, the following branches are protected:
+
+- `master`
+- `release`
+
+### Setting up Protected Branches
+
+You can configure which branches should be protected using the interactive setup:
+
+```bash
+gprune --setup
+```
+
+This will:
+1. Show your current protected branches configuration
+2. Allow you to enter new protected branches (space-separated)
+3. Save the configuration to `~/.gprune_config`
+
+### Viewing Configuration
+
+To view your current protected branches configuration:
+
+```bash
+gprune --config
+```
+
+### Manual Configuration
+
+You can also manually edit the configuration file at `~/.gprune_config`:
+
+```bash
+# Example configuration
+GPRUNE_PROTECTED_BRANCHES=(master main release develop)
+```
+
 ### EXAMPLE
 
 You can perform the removal of the merged local branches by just writing the command:
@@ -50,7 +89,7 @@ gprune
 ### SYNOPSIS
 
 ```bash
-gprune [ -r | --remote | -b | --both ] <branch-name>
+gprune [ -r | --remote | -b | --both | -s | --setup | -c | --config | -v | --version | -h | --help ] <branch-name>
 ```
 
 ### OPTIONS
@@ -65,4 +104,18 @@ gprune [ -r | --remote | -b | --both ] <branch-name>
 
 -b, --both
 	Defines that both remote and local branches which were merged should be removed from the repository
+
+-s, --setup
+	Interactive setup to configure protected branches that won't be deleted.
+	Use: gprune --setup
+
+-c, --config
+	Show current protected branches configuration.
+	Use: gprune --config
+
+-v, --version
+	Display the current version of the git-prune plugin
+
+-h, --help
+	Display usage information and available options
 ```

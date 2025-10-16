@@ -1,14 +1,42 @@
 gprune() {
+  # Configuration file path
+  __gprune_config_file="$HOME/.gprune_config"
+
+  # Load protected branches configuration
+  __load_protected_branches() {
+    if [[ -f "$__gprune_config_file" ]]; then
+      source "$__gprune_config_file"
+    fi
+
+    # Set default protected branches if config doesn't exist or is empty
+    if [[ -z "$GPRUNE_PROTECTED_BRANCHES" ]]; then
+      GPRUNE_PROTECTED_BRANCHES=("master" "release")
+    fi
+  }
+
+  # Build grep patterns for protected branches
+  __build_grep_patterns() {
+    local patterns=()
+    for branch in "${GPRUNE_PROTECTED_BRANCHES[@]}"; do
+      patterns+=("-e" "/$branch\$")
+      patterns+=("-e" "/$branch")
+    done
+    echo "${patterns[@]}"
+  }
+
   __prune_remote_branches() {
-    git push origin `git branch -r --merged "$1" | grep -v "HEAD" | grep -v '/release' | grep -v '/master$' | grep -v "/staging" | grep -v "/develop$" | grep -v "/$1$" | sed 's/origin\//:/g' | tr -d '\n'`
+    local grep_patterns=($(echo $(__build_grep_patterns)))
+    git push origin `git branch -r --merged "$1" | grep -v "HEAD" | grep -v "${grep_patterns[@]}" | grep -v "/$1$" | sed 's/origin\//:/g' | tr -d '\n'`
   }
 
   __prune_local_branches() {
-    git branch -d `git branch --merged "$1" | grep -v 'master$'  | grep -v 'release' | grep -v "develop$" | grep -v "staging" | grep -v "$1$" | sed 's/origin\///g' | tr -d '\n'`
+    local grep_patterns=($(echo $(__build_grep_patterns | sed 's|/||g')))
+    git branch -d `git branch --merged "$1" | grep -v "${grep_patterns[@]}" | grep -v "$1$" | sed 's/origin\///g' | tr -d '\n'`
   }
 
   __print_remote_branches() {
-    __remote_branches=$(git branch -r --merged "$1" | grep -v "HEAD" | grep -v '/release' | grep -v '/master$' | grep -v "/staging" | grep -v "/develop$" | grep -v "/$1$")
+    local grep_patterns=($(echo $(__build_grep_patterns)))
+    __remote_branches=$(git branch -r --merged "$1" | grep -v "HEAD" | grep -v "${grep_patterns[@]}" | grep -v "/$1$")
 
     if [[ -n "$__remote_branches" ]]; then
       echo "These REMOTE branches will be removed:"
@@ -17,7 +45,8 @@ gprune() {
   }
 
   __print_local_branches() {
-    __local_branches=$(git branch --merged "$1" | grep -v 'master$'  | grep -v 'release' | grep -v "develop$" | grep -v "staging" | grep -v "$1$")
+    local grep_patterns=($(echo $(__build_grep_patterns | sed 's|/||g')))
+    __local_branches=$(git branch --merged "$1" | grep -v "${grep_patterns[@]}" | grep -v "$1$")
     if [[ -n "$__local_branches" ]]; then
       echo "These LOCAL branches will be removed:"
       echo "$__local_branches"
@@ -25,7 +54,7 @@ gprune() {
   }
 
   usage="usage:
-gprune [ -r | --remote | -b | --both ] <branch-name>
+gprune [ -r | --remote | -b | --both | -s | --setup ] <branch-name>
 
 options:
 <branch-name>
@@ -42,21 +71,58 @@ Defines that both remote and local branches which were merged
 should be removed from the repository.
 
 -s, --setup
-Defines the protected branches, which won't be deleted in the process.
+Interactive setup to configure protected branches that won't be deleted.
+Use: gprune --setup
+
+-c, --config
+Show current protected branches configuration.
+Use: gprune --config
 "
+
+  # Setup and configuration functions
+  __setup_protected_branches() {
+    echo "Current protected branches configuration:"
+    __load_protected_branches
+    echo "Protected branches: ${GPRUNE_PROTECTED_BRANCHES[*]}"
+    echo ""
+    echo "Enter new protected branches (space-separated, or press Enter to keep current):"
+    read -r new_branches
+
+    if [[ -n "$new_branches" ]]; then
+      echo "GPRUNE_PROTECTED_BRANCHES=($new_branches)" > "$__gprune_config_file"
+      echo "Configuration saved to $__gprune_config_file"
+      echo "New protected branches: $new_branches"
+    else
+      echo "Configuration unchanged."
+    fi
+  }
+
+  __show_config() {
+    __load_protected_branches
+    echo "Protected branches configuration:"
+    echo "Config file: $__gprune_config_file"
+    echo "Protected branches: ${GPRUNE_PROTECTED_BRANCHES[*]}"
+  }
 
   isHelp=false
   isRemote=false
   isLocal=false
   isVersion=false
+  isSetup=false
+  isConfig=false
   remote_branches=""
   local_branches=""
+
+  # Load configuration at start
+  __load_protected_branches
 
   branch_to_compare=$1
 
   case $branch_to_compare in
     ("-h" | "--help") isHelp=true;;
     ("-v" | "--version") isVersion=true;;
+    ("-s" | "--setup") isSetup=true;;
+    ("-c" | "--config") isConfig=true;;
     ("-r" | "--remote") isRemote=true;;
     ("-b" | "--both")
       isRemote=true
@@ -66,12 +132,22 @@ Defines the protected branches, which won't be deleted in the process.
   esac
 
   if $isVersion; then
-    echo "v1.0.3"
+    echo "v1.1.0"
     return
   fi
 
   if $isHelp; then
     echo "$usage"
+    return
+  fi
+
+  if $isSetup; then
+    __setup_protected_branches
+    return
+  fi
+
+  if $isConfig; then
+    __show_config
     return
   fi
 
@@ -89,11 +165,13 @@ Defines the protected branches, which won't be deleted in the process.
     if ([ $isRemote = true ]) then
       echo "Fetching remote branches..."
       git fetch --prune
-      remote_branches=$(git branch -r --merged "$branch_to_compare" | grep -v "HEAD" | grep -v '/release' | grep -v '/master$' | grep -v "/staging" | grep -v "/develop$" | grep -v "/$branch_to_compare$")
+      local grep_patterns=($(echo $(__build_grep_patterns)))
+      remote_branches=$(git branch -r --merged "$branch_to_compare" | grep -v "HEAD" | grep -v "${grep_patterns[@]}" | grep -v "/$branch_to_compare$")
     fi
 
     if ($isLocal) then
-      local_branches=$(git branch --merged "$branch_to_compare" | grep -v 'master$'  | grep -v 'release' | grep -v "develop$" | grep -v "staging" | grep -v "$branch_to_compare$")
+      local grep_patterns=($(echo $(__build_grep_patterns | sed 's|/||g')))
+      local_branches=$(git branch --merged "$branch_to_compare" | grep -v "${grep_patterns[@]}" | grep -v "$branch_to_compare$")
     fi
 
     echo "Current branch: $branch_to_compare"
