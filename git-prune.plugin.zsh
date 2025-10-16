@@ -14,29 +14,58 @@ gprune() {
     fi
   }
 
-  # Build grep patterns for protected branches
+  # Build grep patterns for protected branches (exact match only)
   __build_grep_patterns() {
     local patterns=()
     for branch in "${GPRUNE_PROTECTED_BRANCHES[@]}"; do
-      patterns+=("-e" "/$branch\$")
-      patterns+=("-e" "/$branch")
+      # Check if branch exists locally or remotely before adding to patterns
+      if git branch -a | grep -q "\\b$branch\\b" 2>/dev/null; then
+        # Use word boundaries to ensure exact matching: /exact_branch_name$
+        patterns+=("/$branch\$")
+      fi
     done
-    echo "${patterns[@]}"
+
+    # If we have patterns, join them with "|" for a single regex
+    if [[ ${#patterns[@]} -gt 0 ]]; then
+      IFS='|'
+      echo "${patterns[*]}"
+      unset IFS
+    fi
   }
 
   __prune_remote_branches() {
-    local grep_patterns=($(echo $(__build_grep_patterns)))
-    git push origin `git branch -r --merged "$1" | grep -v "HEAD" | grep -v "${grep_patterns[@]}" | grep -v "/$1$" | sed 's/origin\//:/g' | tr -d '\n'`
+    local grep_pattern=$(__build_grep_patterns)
+    local filtered_branches=""
+    if [[ -n "$grep_pattern" ]]; then
+      filtered_branches=$(git branch -r --merged "$1" | grep -v "HEAD" | grep -vE "$grep_pattern" | grep -v "/$1$")
+    else
+      filtered_branches=$(git branch -r --merged "$1" | grep -v "HEAD" | grep -v "/$1$")
+    fi
+    if [[ -n "$filtered_branches" ]]; then
+      git push origin $(echo "$filtered_branches" | sed 's/origin\//:/g' | tr -d '\n')
+    fi
   }
 
   __prune_local_branches() {
-    local grep_patterns=($(echo $(__build_grep_patterns | sed 's|/||g')))
-    git branch -d `git branch --merged "$1" | grep -v "${grep_patterns[@]}" | grep -v "$1$" | sed 's/origin\///g' | tr -d '\n'`
+    local grep_pattern=$(__build_grep_patterns | sed 's|/||g')
+    local filtered_branches=""
+    if [[ -n "$grep_pattern" ]]; then
+      filtered_branches=$(git branch --merged "$1" | grep -vE "$grep_pattern" | grep -v "$1$")
+    else
+      filtered_branches=$(git branch --merged "$1" | grep -v "$1$")
+    fi
+    if [[ -n "$filtered_branches" ]]; then
+      git branch -d $(echo "$filtered_branches" | sed 's/origin\///g' | tr -d '\n')
+    fi
   }
 
   __print_remote_branches() {
-    local grep_patterns=($(echo $(__build_grep_patterns)))
-    __remote_branches=$(git branch -r --merged "$1" | grep -v "HEAD" | grep -v "${grep_patterns[@]}" | grep -v "/$1$")
+    local grep_pattern=$(__build_grep_patterns)
+    if [[ -n "$grep_pattern" ]]; then
+      __remote_branches=$(git branch -r --merged "$1" | grep -v "HEAD" | grep -vE "$grep_pattern" | grep -v "/$1$")
+    else
+      __remote_branches=$(git branch -r --merged "$1" | grep -v "HEAD" | grep -v "/$1$")
+    fi
 
     if [[ -n "$__remote_branches" ]]; then
       echo "These REMOTE branches will be removed:"
@@ -45,8 +74,12 @@ gprune() {
   }
 
   __print_local_branches() {
-    local grep_patterns=($(echo $(__build_grep_patterns | sed 's|/||g')))
-    __local_branches=$(git branch --merged "$1" | grep -v "${grep_patterns[@]}" | grep -v "$1$")
+    local grep_pattern=$(__build_grep_patterns | sed 's|/||g')
+    if [[ -n "$grep_pattern" ]]; then
+      __local_branches=$(git branch --merged "$1" | grep -vE "$grep_pattern" | grep -v "$1$")
+    else
+      __local_branches=$(git branch --merged "$1" | grep -v "$1$")
+    fi
     if [[ -n "$__local_branches" ]]; then
       echo "These LOCAL branches will be removed:"
       echo "$__local_branches"
@@ -165,13 +198,21 @@ Use: gprune --config
     if ([ $isRemote = true ]) then
       echo "Fetching remote branches..."
       git fetch --prune
-      local grep_patterns=($(echo $(__build_grep_patterns)))
-      remote_branches=$(git branch -r --merged "$branch_to_compare" | grep -v "HEAD" | grep -v "${grep_patterns[@]}" | grep -v "/$branch_to_compare$")
+      local grep_pattern=$(__build_grep_patterns)
+      if [[ -n "$grep_pattern" ]]; then
+        remote_branches=$(git branch -r --merged "$branch_to_compare" | grep -v "HEAD" | grep -vE "$grep_pattern" | grep -v "/$branch_to_compare$")
+      else
+        remote_branches=$(git branch -r --merged "$branch_to_compare" | grep -v "HEAD" | grep -v "/$branch_to_compare$")
+      fi
     fi
 
     if ($isLocal) then
-      local grep_patterns=($(echo $(__build_grep_patterns | sed 's|/||g')))
-      local_branches=$(git branch --merged "$branch_to_compare" | grep -v "${grep_patterns[@]}" | grep -v "$branch_to_compare$")
+      local grep_pattern=$(__build_grep_patterns | sed 's|/||g')
+      if [[ -n "$grep_pattern" ]]; then
+        local_branches=$(git branch --merged "$branch_to_compare" | grep -vE "$grep_pattern" | grep -v "$branch_to_compare$")
+      else
+        local_branches=$(git branch --merged "$branch_to_compare" | grep -v "$branch_to_compare$")
+      fi
     fi
 
     echo "Current branch: $branch_to_compare"
