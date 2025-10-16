@@ -165,7 +165,7 @@ Use: gprune --config
   esac
 
   if $isVersion; then
-    echo "v1.1.0"
+    echo "v1.1.1"
     return
   fi
 
